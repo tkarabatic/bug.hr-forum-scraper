@@ -1,14 +1,9 @@
-from bs4 import BeautifulSoup
+from constants import (
+  ANCHOR_PATH, POST_CLASS_CODE, POST_CLASS_CONTENT, POST_CLASS_DATE,
+  POST_CLASS_IMAGE, POST_CLASS_MAIN, POST_CLASS_QUOTE, POST_PATH, ROOT_URL
+)
 import re
 from utils import clean_string, get_date_string, get_resource_id, get_response
-
-ROOT_URL = 'https://forum.bug.hr'
-ANCHOR_PATH = 'a.naslov'
-POST_PATH = 'div.post'
-POST_CLASS_QUOTE = 'editor_quote'
-POST_CLASS_MAIN = 'postOn'
-POST_CLASS_DATE = 'datum'
-POST_CLASS_CONTENT = 'porukabody'
 
 
 def get_paginated_url(url, page=1):
@@ -40,14 +35,15 @@ def get_thread_post(bs4_tag, is_csv=False):
   return ','.join([data[0], data[1], '"%s"' % clean_string(data[2], is_csv)])
 
 
-def get_thread_posts(thread_url, pages, is_csv=False):
+def get_thread_posts(url, pages, is_csv=False):
   post_list = []
   for page in pages:
-    response = get_response(get_paginated_url(thread_url, page))
-    soup = BeautifulSoup(response.content, 'html.parser')
-    # remove embedded quotes
-    for div in soup.find_all('div', {'class': POST_CLASS_QUOTE}):
-      div.decompose()
+    soup = get_response(get_paginated_url(url, page))
+    if not soup:
+      break
+    # remove embedded quotes, code blocks, and images
+    for element in soup.find_all(class_=[POST_CLASS_QUOTE, POST_CLASS_CODE, POST_CLASS_IMAGE]):
+      element.decompose()
     posts = list(map(lambda x: get_thread_post(x, is_csv), soup.select(POST_PATH)))
     post_list += posts
   return post_list
@@ -63,10 +59,9 @@ def get_link(bs4_tag, is_csv=False):
 def get_link_list(url, pages, is_csv=False):
   link_list = []
   for page in pages:
-    response = get_response(get_paginated_url(url, page))
-    # 'html.parser' is recommended over parsing 'res.text' to avoid character
-    # encoding issues
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = get_response(get_paginated_url(url, page))
+    if not soup:
+      break
     links = list(map(lambda x: get_link(x, is_csv), soup.select(ANCHOR_PATH)))
     link_list += links
   return link_list

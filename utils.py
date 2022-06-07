@@ -1,6 +1,8 @@
 import os
 import re
 import requests
+from constants import CONTENT_CLASS_SUBFORUM, CONTENT_CLASS_THREAD
+from bs4 import BeautifulSoup
 
 
 def get_path(filename):
@@ -27,10 +29,26 @@ def store_to_file(filename, rows, mode='w+'):
       file.write('%s\n' % row)
 
 
+def clean_string(text, escape_double_quotes=False):
+  cleaned = re.sub(r'\s+', ' ', text).strip()
+  return cleaned.replace('"', '\\"') if escape_double_quotes else cleaned
+
+
 def get_response(url):
   response = requests.get(url)
   print('GET "%s", response status code %d' % (url, response.status_code))
-  return response
+  if response.status_code != 200:
+    # Note: querying for a non-existent subforum page triggers an error 500
+    print('A problem has occurred.')
+    return None
+  # 'html.parser' is recommended over parsing 'res.text' to avoid character
+  # encoding issues
+  soup = BeautifulSoup(response.content, 'html.parser')
+  # Note: the bug.hr site does not return a 404 response code for non-existent
+  # thread pages, so we have to check for page content instead
+  content = soup.find('div', {'class': [CONTENT_CLASS_SUBFORUM, CONTENT_CLASS_THREAD]})
+  has_content = content and clean_string(content.text)
+  return soup if has_content else None
 
 
 def get_date_string(timestamp):
@@ -42,8 +60,3 @@ def get_date_string(timestamp):
 def get_resource_id(url):
   id_regex = re.compile(r'.*/(?P<id>\d+).aspx')
   return id_regex.search(url).group('id')
-
-
-def clean_string(text, escape_double_quotes=False):
-  cleaned = re.sub(r'\s+', ' ', text).strip()
-  return cleaned.replace('"', '\\"') if escape_double_quotes else cleaned
