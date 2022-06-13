@@ -10,7 +10,7 @@ def get_path(filename):
     return os.path.join(CURRENT_FOLDER, filename)
 
 
-def get_filename(base='', pages=None, is_csv=False, subforum_id='', thread_id=''):
+def get_filename(base='', pages=None, subforum_id='', thread_id=''):
   name = base or 'bug_forum_sub'
   if subforum_id:
     name = name + '_' + str(subforum_id)
@@ -20,7 +20,7 @@ def get_filename(base='', pages=None, is_csv=False, subforum_id='', thread_id=''
     name = name + '_p' + str(pages[0])
     if pages[-1] != pages[0]:
       name = name + '-' + str(pages[-1])
-  return name + ('.csv' if is_csv else '.txt')
+  return name
 
 
 def store_to_file(filename, rows, mode='w+'):
@@ -29,9 +29,12 @@ def store_to_file(filename, rows, mode='w+'):
       file.write('%s\n' % row)
 
 
-def clean_string(text, escape_double_quotes=False):
-  cleaned = re.sub(r'\s+', ' ', text).strip()
-  return cleaned.replace('"', '\\"') if escape_double_quotes else cleaned
+def clean_string(text):
+  return re.sub(r'\s+', ' ', text).strip()
+
+
+def sanitize_quotes(text):
+  return '"%s"' % text.replace('"', '\\"')
 
 
 def get_response(url):
