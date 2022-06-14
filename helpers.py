@@ -24,13 +24,13 @@ def get_post_data(bs4_tag):
   post_id = str(divs[0]['id'].split('post')[1])
   post_date = get_date_string(divs[1].text)
   post_content = clean_string(divs[2].text)
-  return (post_id, post_date, post_content)
+  return (post_id, post_date, post_content) if post_content else None
 
 
 def get_thread_post(bs4_tag, is_csv=False):
   if not is_csv:
     content = bs4_tag.find('div', {'class': POST_CLASS_CONTENT})
-    return clean_string(content.text)
+    return clean_string(content.text) or None
   return get_post_data(bs4_tag)
 
 
@@ -43,8 +43,13 @@ def get_thread_posts(url, pages, is_csv=False):
     # remove embedded quotes, code blocks, and images
     for element in soup.find_all(class_=[POST_CLASS_QUOTE, POST_CLASS_CODE, POST_CLASS_IMAGE]):
       element.decompose()
-    posts = list(map(lambda x: get_thread_post(x, is_csv), soup.select(POST_PATH)))
-    post_list += posts
+    posts = list()
+    for bs4_tag in soup.select(POST_PATH):
+      post = get_thread_post(bs4_tag, is_csv)
+      if post:
+        posts.append(post)
+    if len(posts) :
+      post_list += posts
   return post_list
 
 
