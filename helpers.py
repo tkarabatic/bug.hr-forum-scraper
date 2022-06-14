@@ -71,3 +71,10 @@ def get_link_list(url, pages, is_csv=False):
     links = list(map(lambda x: get_link(x, is_csv), soup.select(ANCHOR_PATH)))
     link_list += links
   return link_list, last_page
+
+
+def get_resource_data(url, pages, is_csv=False, is_thread=False):
+  resource_id = get_resource_id(url)
+  fn = get_thread_posts if is_thread else get_link_list
+  data, last_page = fn(url, pages, is_csv)
+  return data, last_page, resource_id

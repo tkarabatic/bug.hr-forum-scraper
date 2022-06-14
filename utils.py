@@ -26,6 +26,7 @@ def store_to_file(filename, rows, mode='w+'):
   with open(get_path(filename), mode) as file:
     for row in rows:
       file.write('%s\n' % row)
+    print('Stored %d rows in "%s".' % (len(rows), filename))
 
 
 def clean_string(text):
@@ -62,3 +63,13 @@ def get_date_string(timestamp):
 def get_resource_id(url):
   id_regex = re.compile(r'.*/(?P<id>\d+).aspx')
   return id_regex.search(url).group('id')
+
+
+def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id=''):
+  filename = get_filename(page_start, page_end, name, subforum_id, thread_id)
+  if is_txt:
+    rows = data if not is_csv else list(map(lambda x: x[-1], data))
+    store_to_file('%s.txt' % filename, rows)
+  if is_csv:
+    rows = list(map(lambda x: ','.join(x[:-1] + (sanitize_quotes(x[-1]),)), data))
+    store_to_file('%s.csv' % filename, rows)
