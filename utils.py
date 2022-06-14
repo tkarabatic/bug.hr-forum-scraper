@@ -10,16 +10,15 @@ def get_path(filename):
     return os.path.join(CURRENT_FOLDER, filename)
 
 
-def get_filename(base='', pages=None, subforum_id='', thread_id=''):
+def get_filename(page_start, page_end, base='', subforum_id='', thread_id=''):
   name = base or 'bug_forum_sub'
   if subforum_id:
     name = name + '_' + str(subforum_id)
   if thread_id:
     name = name + '_thr_' + str(thread_id)
-  if pages:
-    name = name + '_p' + str(pages[0])
-    if pages[-1] != pages[0]:
-      name = name + '-' + str(pages[-1])
+  name = name + '_p' + str(page_start)
+  if page_start != page_end:
+    name = name + '-' + str(page_end)
   return name
 
 

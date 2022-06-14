@@ -22,18 +22,22 @@ pages = range(page_start, page_end)
 data = None
 subforum_id = ''
 thread_id = ''
+page_end = pages[:-1]
 
 if args.subforum_list:
-  data = get_link_list(ROOT_URL, pages, is_csv)
+  data, last_page = get_link_list(ROOT_URL, pages, is_csv)
+  page_end = last_page
 elif args.thread_list:
   subforum_id = get_resource_id(args.thread_list)
-  data = get_link_list(args.thread_list, pages, is_csv)
+  data, last_page = get_link_list(args.thread_list, pages, is_csv)
+  page_end = last_page
 elif args.post_list:
   thread_id = get_resource_id(args.post_list)
-  data = get_thread_posts(args.post_list, pages, is_csv)
+  data, last_page = get_thread_posts(args.post_list, pages, is_csv)
+  page_end = last_page
 
 if data:
-  filename = get_filename(args.filename, pages, subforum_id, thread_id)
+  filename = get_filename(pages[0], page_end, args.filename, subforum_id, thread_id)
   if is_txt:
     rows = data if not is_csv else map(lambda x: x[-1], data)
     store_to_file('%s.txt' % filename, rows)
