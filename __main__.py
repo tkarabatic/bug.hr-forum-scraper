@@ -19,8 +19,10 @@ is_txt = args.txt_csv or not args.csv
 
 if args.post_list_multiple:
   with open(args.post_list_multiple) as file:
+    subforum_id = get_resource_id(args.post_list_multiple, is_filename=True)
     while True:
       thread_url = file.readline().strip()
+      # TODO: enable specifying starting thread id
       if not thread_url:
         break
       page_start = 1
@@ -30,7 +32,7 @@ if args.post_list_multiple:
         data, last_page, resource_id = get_resource_data(thread_url, pages, is_csv, is_thread=True)
         if not data:
           break
-        store_data_rows(data, is_txt, is_csv, page_start, last_page, args.filename, thread_id=resource_id)
+        store_data_rows(data, is_txt, is_csv, page_start, last_page, args.filename, subforum_id, thread_id=resource_id, folder_name=str(subforum_id))
         if last_page < (page_end - 1):  # no additional pages are available
           break
         page_start += 100

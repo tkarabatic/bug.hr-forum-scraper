@@ -41,7 +41,6 @@ def get_thread_posts(url, pages, is_csv=False):
     soup = get_response(get_paginated_url(url, page))
     if not soup:
       break
-    last_page = page
     # remove embedded quotes, code blocks, and images
     for element in soup.find_all(class_=[POST_CLASS_QUOTE, POST_CLASS_CODE, POST_CLASS_IMAGE]):
       element.decompose()
@@ -52,6 +51,9 @@ def get_thread_posts(url, pages, is_csv=False):
         posts.append(post)
     if len(posts) :
       post_list += posts
+      last_page = page
+    else:
+      break
   return post_list, last_page
 
 
@@ -67,9 +69,12 @@ def get_link_list(url, pages, is_csv=False):
     soup = get_response(get_paginated_url(url, page))
     if not soup:
       break
-    last_page = page
     links = list(map(lambda x: get_link(x, is_csv), soup.select(ANCHOR_PATH)))
-    link_list += links
+    if len(links):
+      link_list += links
+      last_page = page
+    else:
+      break
   return link_list, last_page
 
 
@@ -77,4 +82,4 @@ def get_resource_data(url, pages, is_csv=False, is_thread=False):
   resource_id = get_resource_id(url)
   fn = get_thread_posts if is_thread else get_link_list
   data, last_page = fn(url, pages, is_csv)
-  return data, last_page, resource_id
+  return (data if len(data) else None), last_page, resource_id

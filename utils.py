@@ -22,8 +22,12 @@ def get_filename(page_start, page_end, base='', subforum_id='', thread_id=''):
   return name
 
 
-def store_to_file(filename, rows, mode='w+'):
-  with open(get_path(filename), mode) as file:
+def store_to_file(rows, filename, folder_name='', mode='w+'):
+  folder_path = get_path(folder_name) if folder_name else ''
+  if folder_path and not os.path.exists(folder_path):
+    os.makedirs(folder_path)
+  file_path = os.path.join(folder_path, filename) if folder_path else get_path(filename)
+  with open(file_path, mode) as file:
     for row in rows:
       file.write('%s\n' % row)
     print('Stored %d rows in "%s".' % (len(rows), filename))
@@ -55,21 +59,23 @@ def get_response(url):
 
 
 def get_date_string(timestamp):
+  # TODO: handle 'jucer/danas' case
   date_regex = re.compile(r'(?P<day>\d{,2}).(?P<month>\d{,2}).(?P<year>\d{4})')
   res = date_regex.search(timestamp).groupdict()
   return '%s-%s-%s' % (res['year'], res['month'].zfill(2), res['day'].zfill(2))
 
 
-def get_resource_id(url):
-  id_regex = re.compile(r'.*/(?P<id>\d+).aspx')
-  return id_regex.search(url).group('id')
+def get_resource_id(string, is_filename=False):
+  regex = r'.*_(?P<id>\d+)_p.*.txt' if is_filename else r'.*/(?P<id>\d+).aspx'
+  id_regex = re.compile(regex)
+  return id_regex.search(string).group('id')
 
 
-def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id=''):
+def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id='', folder_name=''):
   filename = get_filename(page_start, page_end, name, subforum_id, thread_id)
   if is_txt:
     rows = data if not is_csv else list(map(lambda x: x[-1], data))
-    store_to_file('%s.txt' % filename, rows)
+    store_to_file(rows, '%s.txt' % filename, folder_name)
   if is_csv:
     rows = list(map(lambda x: ','.join(x[:-1] + (sanitize_quotes(x[-1]),)), data))
-    store_to_file('%s.csv' % filename, rows)
+    store_to_file(rows, '%s.csv' % filename, folder_name)
