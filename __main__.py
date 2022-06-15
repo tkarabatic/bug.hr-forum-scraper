@@ -10,6 +10,7 @@ parser.add_argument('--subforum-list', help='generate a list of subforums', acti
 parser.add_argument('-tl', '--thread-list', help='specify the subforum URL to generate a list of threads for')
 parser.add_argument('-pl', '--post-list', help='specify the thread URL to generate a list of posts for')
 parser.add_argument('-plm', '--post-list-multiple', help='specify the .txt file with thread URLs to generate post lists for')
+parser.add_argument('-tid', '--thread-id', type=int, help='specify the thread id to start downloading from (used in conjunction with -plm)')
 parser.add_argument('--csv', help='store output data in a .csv file (default is .txt)', action='store_true')
 parser.add_argument('--txt-csv', help='store output data in both .txt and .csv formats', action='store_true')
 
@@ -20,11 +21,17 @@ is_txt = args.txt_csv or not args.csv
 if args.post_list_multiple:
   with open(args.post_list_multiple) as file:
     subforum_id = get_resource_id(args.post_list_multiple, is_filename=True)
+    initial_thread_id = str(args.thread_id)
     while True:
       thread_url = file.readline().strip()
-      # TODO: enable specifying starting thread id
       if not thread_url:
         break
+      current_thread_id = get_resource_id(thread_url)
+      print('thread id:', current_thread_id)
+      if initial_thread_id and current_thread_id != initial_thread_id:
+        continue
+      if initial_thread_id:  # the matching thread has been found; reset the flag
+        initial_thread_id = None
       page_start = 1
       page_end = 101
       while True:

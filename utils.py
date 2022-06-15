@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 import os
 import re
 import requests
@@ -59,7 +60,10 @@ def get_response(url):
 
 
 def get_date_string(timestamp):
-  # TODO: handle 'jucer/danas' case
+  is_yesterday = timestamp.startswith('jučer')
+  if is_yesterday or timestamp.startswith('danas'):
+    today = date.today()
+    return '%s' % (today - timedelta(days=1) if is_yesterday else today)
   date_regex = re.compile(r'(?P<day>\d{,2}).(?P<month>\d{,2}).(?P<year>\d{4})')
   res = date_regex.search(timestamp).groupdict()
   return '%s-%s-%s' % (res['year'], res['month'].zfill(2), res['day'].zfill(2))
