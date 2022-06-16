@@ -21,16 +21,18 @@ is_txt = args.txt_csv or not args.csv
 if args.post_list_multiple:
   with open(args.post_list_multiple) as file:
     subforum_id = get_resource_id(args.post_list_multiple, is_filename=True)
-    initial_thread_id = str(args.thread_id)
+    initial_thread_id = args.thread_id
     while True:
       thread_url = file.readline().strip()
       if not thread_url:
         break
       current_thread_id = get_resource_id(thread_url)
       print('thread id:', current_thread_id)
-      if initial_thread_id and current_thread_id != initial_thread_id:
-        continue
-      if initial_thread_id:  # the matching thread has been found; reset the flag
+      if initial_thread_id:
+        # the matching thread has still not been reached
+        if current_thread_id != str(initial_thread_id):
+          continue
+        # the matching thread has been found; reset the flag
         initial_thread_id = None
       page_start = 1
       page_end = 101
