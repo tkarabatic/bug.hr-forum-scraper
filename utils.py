@@ -31,7 +31,7 @@ def store_to_file(rows, filename, folder_name='', mode='w+'):
   with open(file_path, mode) as file:
     for row in rows:
       file.write('%s\n' % row)
-    print('Stored %d rows in "%s".' % (len(rows), filename))
+    print('Stored %d rows in "%s".' % (len(rows), file_path))
 
 
 def clean_string(text):
