@@ -21,6 +21,14 @@ def get_paginated_url(url, page=1):
 def get_post_data(bs4_tag):
   post_classes = [POST_CLASS_MAIN, POST_CLASS_DATE, POST_CLASS_CONTENT]
   divs = bs4_tag.find_all('div', attrs={'class': post_classes })
+  if not len(divs):
+    # there appears to be an edge case where a thread post with the 'post'
+    # class contains a nested div that also has the 'post' class - which causes
+    # get_thread_posts to include the child div in the result set, resulting
+    # in an error in the mapping below, since the child 'post' only has text
+    # content; such child divs can be safely ignored, since the parent already
+    # provides the required content
+    return None
   post_id = str(divs[0]['id'].split('post')[1])
   post_date = get_date_string(divs[1].text)
   post_content = clean_string(divs[2].text)
