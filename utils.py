@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from time import strptime
 import os
 import re
 import requests
@@ -42,6 +43,10 @@ def sanitize_quotes(text):
   return '"%s"' % text.replace('"', '\\"')
 
 
+def is_after(date, date_to_compare):
+  return strptime(date, '%Y-%m-%d') > strptime(date_to_compare, '%Y-%m-%d')
+
+
 def get_response(url):
   response = requests.get(url)
   print('GET "%s", response status code %d' % (url, response.status_code))
@@ -57,6 +62,12 @@ def get_response(url):
   content = soup.find('div', {'class': [CONTENT_CLASS_SUBFORUM, CONTENT_CLASS_THREAD]})
   has_content = content and clean_string(content.text)
   return soup if has_content else None
+
+
+def get_date_diff_days(first_date_str, second_date_str):
+  first_date = date(*map(int, first_date_str.split('-')))
+  second_date = date(*map(int, second_date_str.split('-')))
+  return abs(second_date - first_date).days
 
 
 def get_date_string(timestamp):
