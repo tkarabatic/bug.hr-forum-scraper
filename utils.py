@@ -12,15 +12,20 @@ def get_path(filename):
     return os.path.join(CURRENT_FOLDER, filename)
 
 
-def get_filename(page_start, page_end, base='', subforum_id='', thread_id=''):
+def get_filename(page_start='', page_end='', base='', subforum_id='', thread_id='', pid_start='', pid_end=''):
   name = base or 'bug_forum_sub'
   if subforum_id:
     name = name + '_' + str(subforum_id)
   if thread_id:
     name = name + '_thr_' + str(thread_id)
-  name = name + '_p' + str(page_start)
-  if page_start != page_end:
-    name = name + '-' + str(page_end)
+  if pid_start or pid_end:
+    name = name + '_pid' + str(pid_start)
+    if pid_end:
+      name = name + '-' + str(pid_end)
+  elif page_start or page_end:
+    name = name + '_p' + str(page_start)
+    if page_start != page_end:
+      name = name + '-' + str(page_end)
   return name
 
 
@@ -86,8 +91,16 @@ def get_resource_id(string, is_filename=False):
   return id_regex.search(string).group('id')
 
 
-def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id='', folder_name=''):
-  filename = get_filename(page_start, page_end, name, subforum_id, thread_id)
+def get_post_ids(string):
+  regex = re.compile(r'.*_pid(?P<id_min>\d+)-{0,1}(?P<id_max>\d*)\.\s*')
+  res = regex.search(string)
+  if not res:
+    return '', ''
+  return res.group('id_min'), res.group('id_max')
+
+
+def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id='', folder_name='', pid_start='', pid_end=''):
+  filename = get_filename(page_start, page_end, name, subforum_id, thread_id, pid_start, pid_end)
   if is_txt:
     rows = data if not is_csv else list(map(lambda x: x[-1], data))
     store_to_file(rows, '%s.txt' % filename, folder_name)

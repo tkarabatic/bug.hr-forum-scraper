@@ -6,7 +6,9 @@ from helpers import (
 )
 import os
 import re
-from utils import get_path, get_resource_id, store_data_rows
+from utils import (
+  get_filename, get_path, get_post_ids, get_resource_id, store_data_rows
+)
 from zipfile import ZipFile
 
 parser = argparse.ArgumentParser()
@@ -18,6 +20,7 @@ parser.add_argument('--subforum-list', help='generate a list of subforums', acti
 parser.add_argument('-tl', '--thread-list', help='specify the subforum URL to generate a list of threads for')
 parser.add_argument('-pl', '--post-list', help='specify the thread URL to generate a list of posts for')
 parser.add_argument('-plm', '--post-list-multiple', help='specify the .txt file with thread URLs to generate post lists for')
+parser.add_argument('-plmpid', '--post-list-multiple-post-ids', help='save files with thread post ids instead of pages in the filename', action='store_true')
 parser.add_argument('-tid', '--thread-id', type=int, help='specify the thread id to start downloading from (used in conjunction with -plm)')
 parser.add_argument('--csv', help='store output data in a .csv file (default is .txt)', action='store_true')
 parser.add_argument('--txt-csv', help='store output data in both .txt and .csv formats', action='store_true')
@@ -48,6 +51,7 @@ elif args.zip_subforums:
           if re.search(f'.*_sub_{subforum_id}_thr_{threads}_.*', file):
             zip.write(file)
 elif args.post_list_multiple:
+  post_ids_in_name = args.post_list_multiple_post_ids
   with open(args.post_list_multiple) as file:
     subforum_id = get_resource_id(args.post_list_multiple, is_filename=True)
     initial_thread_id = args.thread_id
@@ -70,7 +74,29 @@ elif args.post_list_multiple:
         data, last_page, resource_id = get_resource_data(thread_url, pages, is_csv, is_thread=True)
         if not data:
           break
-        store_data_rows(data, is_txt, is_csv, page_start, last_page, args.filename, subforum_id, thread_id=resource_id, folder_name=str(subforum_id))
+        pid_start = ''
+        pid_end = ''
+        if post_ids_in_name:
+          # check for overlap between the new and existing data, uproot duplicates
+          ext = '.csv' if is_csv else '.txt'
+          folder_path = get_path(os.path.join(subforum_id, f'{get_filename(subforum_id=subforum_id, thread_id=resource_id)}_pid*{ext}'))
+          existing_pid_min = ''
+          existing_pid_max = ''
+          existing_files = glob.iglob(folder_path)
+          for file in existing_files:
+            id_min, id_max = get_post_ids(file)
+            if not existing_pid_min or id_min < existing_pid_min:
+              existing_pid_min = id_min
+            if not existing_pid_max or id_max > existing_pid_max:
+              existing_pid_max = id_max
+            if not id_max and not existing_pid_max:
+              existing_pid_max = id_min
+          data = [x for x in data if x[0] > existing_pid_max or x[0] < existing_pid_min]
+          pid_start = data[0][0]
+          pid_end = data[-1][0]
+        if not data:
+          break
+        store_data_rows(data, is_txt, is_csv, page_start, last_page, args.filename, subforum_id, thread_id=resource_id, folder_name=str(subforum_id), pid_start=pid_start, pid_end=pid_end)
         if last_page < (page_end - 1):  # no additional pages are available
           break
         page_start += 100
