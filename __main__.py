@@ -20,7 +20,7 @@ parser.add_argument('--subforum-list', help='generate a list of subforums', acti
 parser.add_argument('-tl', '--thread-list', help='specify the subforum URL to generate a list of threads for')
 parser.add_argument('-pl', '--post-list', help='specify the thread URL to generate a list of posts for')
 parser.add_argument('-plm', '--post-list-multiple', help='specify the .txt file with thread URLs to generate post lists for')
-parser.add_argument('-plmpid', '--post-list-multiple-post-ids', help='save files with thread post ids instead of pages in the filename', action='store_true')
+parser.add_argument('--plmpid', help='save files with thread post ids instead of pages in the filename (note: only works in CSV or TXT/CSV mode)', action='store_true')
 parser.add_argument('-tid', '--thread-id', type=int, help='specify the thread id to start downloading from (used in conjunction with -plm)')
 parser.add_argument('--csv', help='store output data in a .csv file (default is .txt)', action='store_true')
 parser.add_argument('--txt-csv', help='store output data in both .txt and .csv formats', action='store_true')
@@ -51,7 +51,7 @@ elif args.zip_subforums:
           if re.search(f'.*_sub_{subforum_id}_thr_{threads}_.*', file):
             zip.write(file)
 elif args.post_list_multiple:
-  post_ids_in_name = args.post_list_multiple_post_ids
+  post_ids_in_name = args.plmpid
   with open(args.post_list_multiple) as file:
     subforum_id = get_resource_id(args.post_list_multiple, is_filename=True)
     initial_thread_id = args.thread_id
@@ -76,10 +76,9 @@ elif args.post_list_multiple:
           break
         pid_start = ''
         pid_end = ''
-        if post_ids_in_name:
+        if post_ids_in_name and is_csv:
           # check for overlap between the new and existing data, uproot duplicates
-          ext = '.csv' if is_csv else '.txt'
-          folder_path = get_path(os.path.join(subforum_id, f'{get_filename(subforum_id=subforum_id, thread_id=resource_id)}_pid*{ext}'))
+          folder_path = get_path(os.path.join(subforum_id, f'{get_filename(subforum_id=subforum_id, thread_id=resource_id)}_pid*.csv'))
           existing_pid_min = ''
           existing_pid_max = ''
           existing_files = glob.iglob(folder_path)
