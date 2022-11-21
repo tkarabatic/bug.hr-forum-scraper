@@ -82,8 +82,8 @@ elif args.post_list_multiple:
           existing_pid_min = ''
           existing_pid_max = ''
           existing_files = glob.iglob(folder_path)
-          for file in existing_files:
-            id_min, id_max = get_post_ids(file)
+          for existing in existing_files:
+            id_min, id_max = get_post_ids(existing)
             if not existing_pid_min or id_min < existing_pid_min:
               existing_pid_min = id_min
             if not existing_pid_max or id_max > existing_pid_max:
