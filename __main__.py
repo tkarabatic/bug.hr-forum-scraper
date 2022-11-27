@@ -6,10 +6,13 @@ from helpers import (
 )
 import os
 import re
+import time
 from utils import (
   get_filename, get_path, get_post_ids, get_resource_id, store_data_rows
 )
 from zipfile import ZipFile
+
+start_time = time.time()
 
 parser = argparse.ArgumentParser()
 # TODO: remove the '-fn' option (not used)
@@ -123,3 +126,6 @@ else:
 
   if data:
     store_data_rows(data, is_txt, is_csv, pages[0], page_end, args.filename, subforum_id, thread_id)
+
+end_time = time.time()
+print(f'Execution time: {time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))}')
