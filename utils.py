@@ -107,3 +107,9 @@ def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforu
   if is_csv:
     rows = list(map(lambda x: ','.join(x[:-1] + (sanitize_quotes(x[-1]),)), data))
     store_to_file(rows, '%s.csv' % filename, folder_name)
+
+
+def get_pages(args):
+  page_start = args.page or 1
+  page_end = (args.page_end if (args.page_end and args.page_end >= page_start) else page_start) + 1
+  return page_start, page_end

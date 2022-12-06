@@ -8,7 +8,8 @@ import os
 import re
 import time
 from utils import (
-  get_filename, get_path, get_post_ids, get_resource_id, store_data_rows
+  get_filename, get_pages, get_path, get_post_ids, get_resource_id,
+  store_data_rows
 )
 from zipfile import ZipFile
 
@@ -17,8 +18,8 @@ start_time = time.time()
 parser = argparse.ArgumentParser()
 # TODO: remove the '-fn' option (not used)
 parser.add_argument('-fn', '--filename', help='specify the filename to use when storing output data (omit the extension)')
-parser.add_argument('-pg', '--page', type=int, help='specify the start page')
-parser.add_argument('-pge', '--page-end', type=int, help='specify the end page (inclusive)')
+parser.add_argument('-pg', '--page', type=int, help='specify the start page (note: does not work in -ts mode)')
+parser.add_argument('-pge', '--page-end', type=int, help='specify the end page (inclusive; does not work in -ts mode; only specifies the start range in -plm mode, and will not stop execution after the initial scraping)')
 parser.add_argument('--subforum-list', help='generate a list of subforums', action='store_true')
 parser.add_argument('-tl', '--thread-list', help='specify the subforum URL to generate a list of threads for')
 parser.add_argument('-pl', '--post-list', help='specify the thread URL to generate a list of posts for')
@@ -63,15 +64,18 @@ elif args.post_list_multiple:
       if not thread_url:
         break
       current_thread_id = get_resource_id(thread_url)
-      print('thread id:', current_thread_id)
+      print(f'Current thread id: {current_thread_id}')
+      page_start = 1
+      page_end = 101
       if initial_thread_id:
         # the matching thread has still not been reached
         if current_thread_id != str(initial_thread_id):
           continue
-        # the matching thread has been found; reset the flag
+        # the matching thread has been found; reset the flag and set the page range
         initial_thread_id = None
-      page_start = 1
-      page_end = 101
+        if (args.page):
+          page_start, page_end = get_pages(args)
+      print(f'Page range: {page_start} - {page_end}')
       while True:
         pages = range(page_start, page_end)
         data, last_page, resource_id = get_resource_data(thread_url, pages, is_csv, is_thread=True)
@@ -104,8 +108,7 @@ elif args.post_list_multiple:
         page_start += 100
         page_end += 100
 else:
-  page_start = args.page or 1
-  page_end = (args.page_end if (args.page_end and args.page_end >= page_start) else page_start) + 1
+  page_start, page_end = get_pages(args)
   pages = range(page_start, page_end)
   data = None
   subforum_id = ''
