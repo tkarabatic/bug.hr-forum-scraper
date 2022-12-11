@@ -91,12 +91,19 @@ def get_resource_id(string, is_filename=False):
   return id_regex.search(string).group('id')
 
 
+def get_int(string):
+  try:
+    return int(string or '')
+  except:
+    return 0
+
+
 def get_post_ids(string):
   regex = re.compile(r'.*_pid(?P<id_min>\d+)-{0,1}(?P<id_max>\d*)\.\s*')
   res = regex.search(string)
   if not res:
     return '', ''
-  return res.group('id_min'), res.group('id_max')
+  return get_int(res.group('id_min')), get_int(res.group('id_max'))
 
 
 def store_data_rows(data, is_txt, is_csv, page_start, page_end, name='', subforum_id='', thread_id='', folder_name='', pid_start='', pid_end=''):

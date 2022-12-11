@@ -8,7 +8,7 @@ import os
 import re
 import time
 from utils import (
-  get_filename, get_pages, get_path, get_post_ids, get_resource_id,
+  get_filename, get_int, get_pages, get_path, get_post_ids, get_resource_id,
   store_data_rows
 )
 from zipfile import ZipFile
@@ -86,8 +86,8 @@ elif args.post_list_multiple:
         if post_ids_in_name and is_csv:
           # check for overlap between the new and existing data, uproot duplicates
           folder_path = get_path(os.path.join(subforum_id, f'{get_filename(subforum_id=subforum_id, thread_id=resource_id)}_pid*.csv'))
-          existing_pid_min = ''
-          existing_pid_max = ''
+          existing_pid_min = 0
+          existing_pid_max = 0
           existing_files = glob.iglob(folder_path)
           for existing in existing_files:
             id_min, id_max = get_post_ids(existing)
@@ -97,10 +97,12 @@ elif args.post_list_multiple:
               existing_pid_max = id_max
             if not id_max and not existing_pid_max:
               existing_pid_max = id_min
-          data = [x for x in data if x[0] > existing_pid_max or x[0] < existing_pid_min]
-          pid_start = data[0][0]
-          pid_end = data[-1][0]
+          data = [x for x in data if get_int(x[0]) > existing_pid_max or get_int(x[0]) < existing_pid_min]
+          if len(data):
+            pid_start = data[0][0]
+            pid_end = data[-1][0]
         if not data:
+          print('No data to store.')
           break
         store_data_rows(data, is_txt, is_csv, page_start, last_page, args.filename, subforum_id, thread_id=resource_id, folder_name=str(subforum_id), pid_start=pid_start, pid_end=pid_end)
         if last_page < (page_end - 1):  # no additional pages are available
