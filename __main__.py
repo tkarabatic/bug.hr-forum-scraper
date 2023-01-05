@@ -1,8 +1,8 @@
 import argparse
 import glob
 from helpers import (
-  get_eligible_threads, get_link_list, get_response, get_resource_data,
-  get_thread_stats, ROOT_URL
+  annotate_subforum, get_eligible_threads, get_link_list, get_response,
+  get_resource_data, get_thread_stats, ROOT_URL
 )
 import os
 import re
@@ -28,8 +28,9 @@ parser.add_argument('--plmpid', help='save files with thread post ids instead of
 parser.add_argument('-tid', '--thread-id', type=int, help='specify the thread id to start downloading from (used in conjunction with -plm)')
 parser.add_argument('--csv', help='store output data in a .csv file (default is .txt)', action='store_true')
 parser.add_argument('--txt-csv', help='store output data in both .txt and .csv formats', action='store_true')
-parser.add_argument('-ts', '--thread-stats', nargs='+', help='specify the subforum id(s) to generate thread stats for')
+parser.add_argument('-ts', '--thread-stats', nargs='+', help='specify the subforum id(s) to generate thread stats for (note: does not work with files generated using --plmpid)')
 parser.add_argument('-zs', '--zip-subforums', help='specify the file (generated using --thread-stats) to zip subforum thread files from')
+parser.add_argument('-as', '--annotate-subforums', nargs='+', help='specify the subforum id(s) to create corresponding metadata annotation file(s) for Sketch Engine upload (note: only works if the corresponding folder exists and contains thread .csv files)')
 
 args, unknown = parser.parse_known_args()
 is_csv = args.txt_csv or args.csv or False
@@ -54,6 +55,9 @@ elif args.zip_subforums:
         for file in glob.iglob(folder_path):
           if re.search(f'.*_sub_{subforum_id}_thr_{threads}_.*', file):
             zip.write(file)
+elif args.annotate_subforums:
+  for subforum_id in args.annotate_subforums:
+    annotate_subforum(subforum_id)
 elif args.post_list_multiple:
   post_ids_in_name = args.plmpid
   with open(args.post_list_multiple) as file:

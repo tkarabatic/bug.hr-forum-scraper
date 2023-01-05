@@ -1,6 +1,7 @@
 from constants import (
   ANCHOR_PATH, POST_CLASS_CODE, POST_CLASS_CONTENT, POST_CLASS_DATE,
-  POST_CLASS_IMAGE, POST_CLASS_MAIN, POST_CLASS_QUOTE, POST_PATH, ROOT_URL
+  POST_CLASS_IMAGE, POST_CLASS_MAIN, POST_CLASS_QUOTE, POST_PATH, ROOT_URL,
+  SUBFORUM_TITLES
 )
 import csv
 import os
@@ -172,4 +173,26 @@ def get_eligible_threads(subforum_ids, max_word_count=1000000):
       threads_per_subforum[subforum_id] = thread_ids
       expended_words += subforum_word_count
   return threads_per_subforum
+
+
+def annotate_subforum(id):
+  print(f'Annotating data for subforum {id}...')
+  dir_path = get_path(id)
+  dir_files = os.scandir(dir_path)
+  with open(get_path(f'bug_subforum_{id}_annotated.txt'), 'a+') as annotated:
+    name, parent_name = SUBFORUM_TITLES[id]
+    annotated.write(f'<doc id="{id}" name="{name}" parent_forum_name="{parent_name}">')
+    for dir_file in dir_files:
+      if not dir_file.name.endswith('.csv'):
+        continue
+      print(f'Current file: {dir_file.name}')
+      thread_id = dir_file.name.split('thr_')[1].split('_pid')[0]
+      with open(os.path.join(dir_path, dir_file.name), 'r') as file:
+        csv_file = csv.reader(file)
+        for post in csv_file:
+          if not post:
+            break
+          year, month, *_ = post[1].split('-')
+          annotated.write(f'<post id="{post[0]}" date="{post[1]}" thread_id="{thread_id}" year="{year}" month="{month}">{post[2]}</post>')
+    annotated.write('</doc>')
 
