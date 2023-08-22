@@ -31,6 +31,7 @@ parser.add_argument('--txt-csv', help='store output data in both .txt and .csv f
 parser.add_argument('-ts', '--thread-stats', nargs='+', help='specify the subforum id(s) to generate thread stats for (note: does not work with files generated using --plmpid)')
 parser.add_argument('-zs', '--zip-subforums', help='specify the file (generated using --thread-stats) to zip subforum thread files from')
 parser.add_argument('-as', '--annotate-subforums', nargs='+', help='specify the subforum id(s) to create corresponding metadata annotation file(s) for Sketch Engine upload (note: only works if the corresponding folder exists and contains thread .csv files)')
+parser.add_argument('--csv-field-max', help='increase CSV field size to system max (used in conjunction with -as)', action='store_true')
 
 args, unknown = parser.parse_known_args()
 is_csv = args.txt_csv or args.csv or False
@@ -57,7 +58,7 @@ elif args.zip_subforums:
             zip.write(file)
 elif args.annotate_subforums:
   for subforum_id in args.annotate_subforums:
-    annotate_subforum(subforum_id)
+    annotate_subforum(subforum_id, args.csv_field_max)
 elif args.post_list_multiple:
   post_ids_in_name = args.plmpid
   with open(args.post_list_multiple) as file:

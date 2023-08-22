@@ -6,6 +6,7 @@ from constants import (
 import csv
 import os
 import re
+import sys
 from math import floor
 from utils import (
   clean_string, get_date_diff_days, get_date_string, get_path, get_resource_id,
@@ -175,10 +176,14 @@ def get_eligible_threads(subforum_ids, max_word_count=1000000):
   return threads_per_subforum
 
 
-def annotate_subforum(id):
+def annotate_subforum(id, use_max_csv_field_size=False):
+  if use_max_csv_field_size:
+    print('Using max allowed CSV field size')
+    csv.field_size_limit(sys.maxsize)
   print(f'Annotating data for subforum {id}...')
   dir_path = get_path(id)
   dir_files = os.scandir(dir_path)
+  post_ids = set()
   with open(get_path(f'bug_subforum_{id}_annotated.txt'), 'a+') as annotated:
     name, parent_name = SUBFORUM_TITLES[id]
     annotated.write(f'<doc id="{id}" name="{name}" parent_forum_name="{parent_name}">')
@@ -192,6 +197,11 @@ def annotate_subforum(id):
         for post in csv_file:
           if not post:
             break
+          if post[0] in post_ids:
+            print(f'Duplicate post id! {post[0]}')
+            break
+          else:
+            post_ids.add(post[0])
           year, month, *_ = post[1].split('-')
           annotated.write(f'<post id="{post[0]}" date="{post[1]}" thread_id="{thread_id}" year="{year}" month="{month}">{post[2]}</post>')
     annotated.write('</doc>')
